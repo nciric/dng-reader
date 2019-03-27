@@ -13,10 +13,8 @@ import re
 
 from optparse import OptionParser
 
-TEMPLATE_1 = re.compile(r'.*?(\d+)\.\d+(?:-(\d+)\.\d+)? mm f/(\d\.\d)(?:-(\d\.\d))?.*')
-TEMPLATE_2 = re.compile(r'.*?(\d+)(?:-(\d+)) F(\d)(?:\.(\d))?.*')
-TEMPLATE_3 = re.compile(r'.*?(\d+)mm F(\d)(?:\.(\d))?.*')
-TEMPLATE_4 = re.compile(r'.*?(\d+)(?:-(\d+))?mm f/(\d\.\d)(?:-(\d\.\d))?.*')
+FOCAL_LENGTH = re.compile(r'.*?(\d+(\.\d+)?)(-\d+(\.\d+)?)?.*')
+F_NUMBER = re.compile(r'.*?(?:F|f/)(\d+(\.\d+)?)(-\d+(\.\d+)?)?.*')
 
 def dateOnly(full_date):
   '''
@@ -28,52 +26,24 @@ def dateOnly(full_date):
 def simplifyLensModel(lens_model):
   '''
   Lens models come in various level of details.
-  Try to simplify them for data processing, e.g.
-    70.0-200.0 mm f/4.0, Tokina AT-X 17-35 F4 PRO FX into 70-200 f/4.0
+  Try to simplify them for data processing.
   '''
-  lens_match = TEMPLATE_1.fullmatch(lens_model)
-  if (lens_match != None):
-    lens_match = lens_match.groups()
-    result = lens_match[0]
-    if (lens_match[1] != None):
-      result += '-' + lens_match[1]
-    result += ' f/' + lens_match[2]
-    if (lens_match[3] != None):
-      result += '-' + lens_match[3]
-    return result
-
-  lens_match = TEMPLATE_2.fullmatch(lens_model)
-  if (lens_match != None):
-    lens_match = lens_match.groups()
-    result = lens_match[0]
-    if (lens_match[1] != None):
-      result += '-' + lens_match[1]
-    result += ' f/' + lens_match[2]
-    if (lens_match[3] != None):
-      result += '.' + lens_match[3]
+  focal_length = FOCAL_LENGTH.match(lens_model)
+  f_number = F_NUMBER.match(lens_model)
+  if (focal_length != None and f_number != None):
+    focal_length = focal_length.groups()
+    if (focal_length[2] != None):
+      result = ''.join([focal_length[0], focal_length[2]])
     else:
-      result += '.0'
-    return result
+      result = focal_length[0]
 
-  lens_match = TEMPLATE_3.fullmatch(lens_model)
-  if (lens_match != None):
-    lens_match = lens_match.groups()
-    result = lens_match[0] + ' f/' + lens_match[1]
-    if (lens_match[2] != None):
-      result += '.' + lens_match[2]
+    result += ' f/'
+    f_number = f_number.groups()
+    if (f_number[2] != None):
+      result += ''.join([f_number[0], f_number[2]])
     else:
-      result += '.0'
-    return result
+      result += f_number[0]
 
-  lens_match = TEMPLATE_4.fullmatch(lens_model)
-  if (lens_match != None):
-    lens_match = lens_match.groups()
-    result = lens_match[0]
-    if (lens_match[1] != None):
-      result += '-' + lens_match[1]
-    result += ' f/' + lens_match[2]
-    if (lens_match[3] != None):
-      result += '-' + lens_match[3]
     return result
 
   print('Failed on:', lens_model)
