@@ -26,7 +26,7 @@ def dateOnly(full_date):
 def simplifyLensModel(lens_model):
   '''
   Lens models come in various level of details.
-  Try to simplify them for data processing.
+  Try to simplify them for data processing, e.g. removing .0 and replacing F with f/.
   '''
   focal_length = FOCAL_LENGTH.match(lens_model)
   f_number = F_NUMBER.match(lens_model)
@@ -44,7 +44,7 @@ def simplifyLensModel(lens_model):
     else:
       result += f_number[0]
 
-    return result
+    return result.replace('.0', '')
 
   print('Failed on:', lens_model)
   exit(1)
